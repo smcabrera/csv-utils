@@ -3,17 +3,7 @@ require 'pry'
 
 module MergeHelpers
 
-  def range(num)
-    result = []
-    count = 0
-    num.times do
-      result << count
-      count += 1
-    end
-    return result
-  end
-
-  def append_csv_files(filenames_list)
+  def self.append_csv_files(filenames_list)
     merged_array = []
     filenames_list.each do |file|
       table = CSV.read(file, headers:true)
@@ -24,28 +14,45 @@ module MergeHelpers
     CSV::Table.new merged_array
   end
 
-  def select_only_columns(table, column_names_list)
+  def self.select_only_columns(table, headers)
     # Selects from the table those columns in the columns list and returns a new array with only those columns
-    headers = []
-    result_array = []
     column_list = []
-    column_names_list.each do |column_name|
-      column_list << table[column_name]
-      headers << column_name
+    headers.each do |col_name|
+      column_list << table[col_name]
     end
+    # You can probably completely get rid of the above and use it in the logic below
+
+    #We have them stored as columns; now to write them out as rows
+    row_array = []
+    table.length.times do |row_num|
+      fields = []
+      column_list.each do |col|
+        fields << col[row_num]
+      end
+      row = CSV::Row.new(headers, fields)
+      row_array << row #todo: Here too we should be able to refactor--add a row if rows exists otherwise set rows to be a an array that contains just row
+    end
+    CSV::Table.new(row_array)
   end
 
+  def self.merge_rows(row1, row2, merge_key)
+    # Create a list containing the headers for the final merged row
+    headers = row2.headers.dup
+    headers.length.times do |num|
+      row1.push([headers[num], row2[num]])
+    end
+    row1.delete(merge_key)
+    return row1
+  end
 
-  def merge_tables(master_table, merge_table)
+  def self.merge_tables(master_table, merge_table, merge_key)
     output_table = CSV::Table.new []
-    # grab all the rows that  are to be merged [[]]
-    # do merge for all matching rows
-    gadata.each do |row|
-      table.each do |row2|
-         merge_rows(row, row2)  if row["token"] == row2["token"]
-         new_row = row.dup
-         new_row["email"] = row2["email"]
-         output_table << new_row
+    master_table.each do |row|
+      merge_table.each do |row2|
+        binding.pry
+        if row[merge_key] == row2[merge_key]
+          output_table << merge_rows(row, row2, merge_key)
+        end
       end
     end
     return output_table
