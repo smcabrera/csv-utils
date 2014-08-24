@@ -37,5 +37,31 @@ puts table_merged # =>
 # stephen , 1234  , stephen@gmail.com
 # jill    , 5678  , jill@gmail.com
 
+# Now to test the append.rb script
+
+load 'merge-helper.rb'
+cd MergeHelpers
+
+headers = ['name'    , 'token' , 'trash'         ]
+row1    = ['stephen' , '1234'  , 'trash'          ]
+row2    = ['jill'    , '5678'  , 'deleteme' ]
+row3    = ['jack'    , '10101' , 'moretrash'      ]
+
+first_half = CSV::Table.new([CSV::Row.new(headers, row1)])
+first_half << CSV::Row.new(headers, row2)
+first_half << CSV::Row.new(headers, row3)
+
+second_half = CSV::Table.new([CSV::Row.new(headers, ['Mitchel', '1249'])])
+second_half << CSV::Row.new(headers, ['Wilbur', '2910'])
+second_half << CSV::Row.new(headers, ['Hank', '1956'])
+
+# Then let's output these to use them as files
+output_table('first-half.csv', first_half)
+output_table('second-half.csv', second_half)
+
+append_list = ['first_half.csv', 'second-half.csv']
+
+complete_table = append_csv_files(append_list)
+output_table('two-halves-make-a-whole.csv', complete_table)
 
 
